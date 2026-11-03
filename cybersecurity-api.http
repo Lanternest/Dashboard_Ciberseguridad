@@ -1,0 +1,143 @@
+### ===================================================================
+### DASHBOARD DE AUDITORÍA Y REPORTES DE CIBERSEGURIDAD - HTTP CLIENT
+### ===================================================================
+
+@baseUrl = http://localhost:8080
+@token = {{loginAdmin.response.body.token}}
+
+### 1. AUTENTICACIÓN: Login como Administrador (Genera JWT de corta vida: 5 minutos / 300s)
+# @name loginAdmin
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "admin",
+  "password": "Admin123!"
+}
+
+### 2. AUTENTICACIÓN: Login como Auditor de Ciberseguridad
+POST {{baseUrl}}/api/auth/login
+Content-Type: application/json
+
+{
+  "username": "auditor",
+  "password": "Auditor123!"
+}
+
+### 3. VERIFICACIÓN DE IDENTIDAD: Consultar usuario autenticado
+GET {{baseUrl}}/api/auth/me
+Authorization: Bearer {{token}}
+
+### 4. PRUEBA DE AUTENTICACIÓN FORZADA (Sin token debe devolver 401 Unauthorized)
+GET {{baseUrl}}/api/servers
+
+### 5. ACTIVOS DE RED: Listar todos los servidores
+GET {{baseUrl}}/api/servers
+Authorization: Bearer {{token}}
+
+### 6. CONSULTA NATIVA JPA: Filtrar rápidamente activos de red expuestos a internet (is_exposed = 1)
+GET {{baseUrl}}/api/servers/exposed
+Authorization: Bearer {{token}}
+
+### 7. CONSULTA NATIVA JPA: Filtrar sistemas operativos desactualizados (is_outdated_os = 1)
+GET {{baseUrl}}/api/servers/outdated-os
+Authorization: Bearer {{token}}
+
+### 8. CONSULTA NATIVA JPA: Servidores expuestos Y desactualizados (Riesgo Crítico Combinado)
+GET {{baseUrl}}/api/servers/exposed-and-outdated
+Authorization: Bearer {{token}}
+
+### 9. CONSULTA NATIVA JPA: Servidores expuestos con vulnerabilidades CRÍTICAS activas
+GET {{baseUrl}}/api/servers/critical-risk
+Authorization: Bearer {{token}}
+
+### 10. ACTIVOS DE RED: Registrar nuevo servidor perimetral
+POST {{baseUrl}}/api/servers
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "hostname": "srv-cloud-vpn01",
+  "ipAddress": "198.51.100.99",
+  "macAddress": "00:50:56:FE:ED:01",
+  "operatingSystem": "Debian",
+  "osVersion": "12",
+  "environment": "PRODUCTION",
+  "isExposed": true,
+  "isOutdatedOs": false,
+  "status": "ONLINE",
+  "location": "Cloud Gateway AWS us-east-1",
+  "description": "Servidor VPN perimetral corporativo"
+}
+
+### 11. CVEs: Listar catálogo de vulnerabilidades mapeadas
+GET {{baseUrl}}/api/cves
+Authorization: Bearer {{token}}
+
+### 12. CVEs: Consultar CVE específico
+GET {{baseUrl}}/api/cves/CVE-2021-44228
+Authorization: Bearer {{token}}
+
+### 13. CVEs: Registrar nuevo CVE
+POST {{baseUrl}}/api/cves
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "cveCode": "CVE-2023-38606",
+  "title": "Vulnerabilidad en el Kernel de Apple",
+  "description": "Una app maliciosa puede modificar el estado de la memoria del kernel eludiendo protecciones de hardware.",
+  "cvssScore": 8.8,
+  "severity": "HIGH",
+  "publishedDate": "2023-07-24",
+  "remediationGuide": "Aplicar parches de actualización de software de Apple."
+}
+
+### 14. ESCANEOS: Listar sesiones de escaneo centralizadas
+GET {{baseUrl}}/api/scans
+Authorization: Bearer {{token}}
+
+### 15. HALLAZGOS DE VULNERABILIDAD: Reportar vulnerabilidad (Auditoría automática de IP y usuario)
+POST {{baseUrl}}/api/findings
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "serverId": 1,
+  "cveCode": "CVE-2023-22515",
+  "port": 8090,
+  "protocol": "TCP"
+}
+
+### 16. HALLAZGOS: Listar todas las vulnerabilidades detectadas y sus campos de auditoría
+GET {{baseUrl}}/api/findings
+Authorization: Bearer {{token}}
+
+### 17. AUDITORÍA & MITIGACIÓN: Mitigar vulnerabilidad (Registra quién, cuándo, IP origen y notas)
+PUT {{baseUrl}}/api/findings/1/mitigate
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "mitigationNotes": "Se actualizó el servicio Apache a la última versión estable y se aplicaron reglas WAF en Cloudflare."
+}
+
+### 18. CONSULTA NATIVA: Vulnerabilidades activas de un servidor específico
+GET {{baseUrl}}/api/findings/server/2/active
+Authorization: Bearer {{token}}
+
+### 19. CONSULTA NATIVA: Vulnerabilidades activas filtradas por severidad CRITICAL
+GET {{baseUrl}}/api/findings/severity/CRITICAL/unmitigated
+Authorization: Bearer {{token}}
+
+### 20. AUDITORÍA FORENSE: Consultar tabla central de logs de auditoría (Últimos 20)
+GET {{baseUrl}}/api/audit-logs/recent?limit=20
+Authorization: Bearer {{token}}
+
+### 21. AUDITORÍA FORENSE: Filtrar eventos por IP de origen (Consulta Nativa)
+GET {{baseUrl}}/api/audit-logs/source-ip/127.0.0.1
+Authorization: Bearer {{token}}
+
+### 22. DASHBOARD: Métricas consolidadas de ciberseguridad
+GET {{baseUrl}}/api/dashboard/metrics
+Authorization: Bearer {{token}}
